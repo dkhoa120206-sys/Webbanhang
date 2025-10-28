@@ -18,11 +18,11 @@ public class RegisterModel : PageModel
     {
         if (Password != ConfirmPassword)
         {
-            Message = "M?t kh?u xác nh?n không kh?p!";
+            Message = "Mật khẩu xác nhận không khớp";
             return;
         }
 
-        // T?m th?i l?u thông tin ng??i dùng trong Session
+        
         HttpContext.Session.SetString("FullName", FullName);
         HttpContext.Session.SetString("Email", Email);
         HttpContext.Session.SetString("Password", Password);
