@@ -1,0 +1,406 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Demo Store — Nike Products (Unauthorized Demo)</title>
+    <meta name="description" content="Demo cửa hàng bán giày thể thao">
+    <link rel="stylesheet" href="demo.css" />
+
+</head>
+<body>
+
+<!-- Khu vực đăng nhập / đăng ký -->
+<div style="background-color:#f8f8f8; padding:20px; border-radius:10px; margin-bottom:20px;">
+    <h3 style="margin-bottom:10px;">Đăng nhập khách hàng</h3>
+
+    <form method="post" asp-page="/Login">
+        <input type="text" name="Username" placeholder="Tên đăng nhập" required style="margin:5px; padding:5px;" />
+        <input type="password" name="Password" placeholder="Mật khẩu" required style="margin:5px; padding:5px;" />
+        <button type="submit" style="margin:5px;">Đăng nhập</button>
+    </form>
+
+    <p>Chưa có tài khoản?
+        <a asp-page="/Register">Đăng ký ngay</a>
+    </p>
+</div>
+
+<!-- Nội dung trang chủ -->
+<h2>Bộ sưu tập Nike mới về</h2>
+<p>Chạy bộ, tập gym hay lối sống — chọn đôi phù hợp với bạn.</p>
+
+
+    <div class="topbar">Miễn phí vận chuyển cho đơn hàng từ 1.000.000đ</div>
+    <header class="header">
+        <div class="container header-inner">
+            <div class="logo">Athletics Store</div>
+            <nav class="nav" id="categoryNav">
+                <button data-cat="all" class="active">Tất cả</button>
+                <button data-cat="running">Running</button>
+                <button data-cat="training">Training</button>
+                <button data-cat="lifestyle">Lifestyle</button>
+            </nav>
+            <div class="search">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="#6b7280" stroke-width="2" stroke-linecap="round" /></svg>
+                <input id="searchInput" placeholder="Tìm giày Nike..." />
+            </div>
+            <button class="cart-btn" id="openCart">
+                🛒 Giỏ hàng
+                <span class="badge" id="cartCount">0</span>
+            </button>
+        </div>
+    </header>
+
+    <div class="container">
+        <section class="hero">
+            <div style="flex:1 1 360px">
+                <h1>Bộ sưu tập Nike mới về</h1>
+                <p>Chạy bộ, tập gym hay lifestyle — chọn đôi phù hợp với bạn.</p>
+                <div class="disclaimer">Demo không phải website chính thức của Nike. Nếu bán hàng thật, hãy đảm bảo bạn là đại lý/đối tác được ủy quyền và tuân thủ hướng dẫn thương hiệu.</div>
+            </div>
+            <div style="flex:1 1 240px; min-width:220px; text-align:center">
+                <img alt="Sneaker" style="max-width:280px; width:100%" src="https://picsum.photos/seed/nikehero/600/400" />
+            </div>
+        </section>
+
+        <section class="products" id="productGrid"></section>
+    </div>
+
+    <!-- Cart drawer -->
+    <div class="backdrop" id="backdrop"></div>
+    <aside class="drawer" id="cartDrawer" aria-hidden="true">
+        <header>
+            <strong>Giỏ hàng</strong>
+            <button id="closeCart">Đóng ✕</button>
+        </header>
+        <div class="items" id="cartItems"></div>
+        <footer>
+            <div class="totals">
+                <div>Tạm tính</div>
+                <div id="cartTotal" class="price">0đ</div>
+            </div>
+            <button class="btn btn-primary" id="checkoutBtn" style="width:100%">Tiến hành đặt hàng</button>
+        </footer>
+    </aside>
+
+    <!-- Checkout modal -->
+    <div class="modal" id="checkoutModal">
+        <div class="panel">
+            <header>
+                <strong>Đặt hàng</strong>
+                <button id="closeCheckout">Đóng ✕</button>
+            </header>
+            <div class="content">
+                <div class="col">
+                    <h4>Thông tin nhận hàng</h4>
+                    <div class="field">
+                        <label>Họ và tên</label>
+                        <input id="name" placeholder="Nguyễn Văn A" />
+                    </div>
+                    <div class="field">
+                        <label>Số điện thoại</label>
+                        <input id="phone" placeholder="09xx xxx xxx" />
+                    </div>
+                    <div class="field">
+                        <label>Email (tuỳ chọn)</label>
+                        <input id="email" placeholder="you@email.com" />
+                    </div>
+                    <div class="field">
+                        <label>Địa chỉ</label>
+                        <textarea id="address" rows="3" placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"></textarea>
+                    </div>
+                    <div class="field">
+                        <label>Ghi chú (tuỳ chọn)</label>
+                        <textarea id="note" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="col">
+                    <h4>Đơn hàng của bạn</h4>
+                    <div id="summary"></div>
+                    <div style="display:flex; justify-content:space-between; margin-top:10px; font-weight:800">
+                        <div>Tổng cộng</div>
+                        <div id="grandTotal">0đ</div>
+                    </div>
+                    <div class="disclaimer" style="margin-top:8px">
+                        Đây là demo. Nút “Đặt hàng” sẽ mô phỏng việc tạo đơn, không thanh toán thật.
+                    </div>
+                    <button id="placeOrder" class="btn btn-primary" style="margin-top:12px; width:100%">Đặt hàng (demo)</button>
+                    <button id="clearCart" class="btn btn-danger" style="margin-top:8px; width:100%">Xoá giỏ hàng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="product-list"
+    </div>
+    <script>
+        // Định dạng tiền VNĐ
+        const VND = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
+
+        // Dữ liệu sản phẩm
+        const products = [
+            {
+                id: 'pegasus',
+                name: 'Nike Air Zoom Pegasus 41',
+                price: 3599000,
+                category: 'running',
+                colors: ['Đen', 'Trắng'],
+                sizes: ['38', '39', '40', '41', '42'],
+                img_src: 'data:image/jpeg;base64,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'
+
+            },
+            {
+                id: 'metcon',
+                name: 'Nike Metcon 9',
+                price: 2999000,
+                category: 'training',
+                colors: ['Xanh Neon', 'Đen'],
+                sizes: ['39', '40', '41', '42', '43'],
+                img_src:'data:image/jpeg;base64,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'
+
+            },
+            {
+                id: 'revolution',
+                name: 'Nike Revolution 7',
+                price: 1899000,
+                category: 'running',
+                colors: ['Xám', 'Xanh Dương'],
+                sizes: ['38', '39', '40', '41', '42'],
+                img_src:'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBwgHBgkIBwgKCgkLDRYPDQwMDRsUFRAWIB0iIiAdHx8kKDQsJCYxJx8fLT0tMTU3Ojo6Iys/RD84QzQ5OjcBCgoKDQwNGg8PGjclHyU3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3N//AABEIAMAAzAMBIgACEQEDEQH/xAAcAAEAAQUBAQAAAAAAAAAAAAAABwIDBAYIBQH/xABEEAABAwMBBAYFCAcIAwAAAAABAAIDBAURBhIhMVEHE0FhcZEUIjKB0iNCcoKhscHRFRYzYpLC4TZDU1Zjc4TwFyRS/8QAGQEBAQEBAQEAAAAAAAAAAAAAAAECBAUD/8QAJBEBAQACAQQCAQUAAAAAAAAAAAECEQMEEiFRBTETM0GRobH/2gAMAwEAAhEDEQA/AJoREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQERUTSx08bpZ3tjY0ZLnu2QPegrViprKSkje+qqYoWMbtvMjwMDmo1uvTPaYJamG226qqzHkQzFzWRyEduc5DfdkqH75WVd7r5q+oq+ummJc9wf6u88MeQ9yCXL50zUlPNJDZaH0prcgVE79hpPMADJHkvV6MtcV+qauupLlHTNkhibLE6BpbtAkgggk8PV396gQU1RI0l7octAw0MznPPt8luPRPe6DTmqjLeZH0zZ6Z1OxxG0xri5py48vV92d6g6KRUseJGNe0hzXDIc05BHiqlQRF5uobzS6fs9TdK44hhbnA4vdwDR3k4QekATwCLl+/anv2pK11bNW9Wc5jpmvLWxjsDf8Au9Sv0P6xmvVJLZ7tIXXCkbtRukPryRd/MtO7PIjmipJRERBERAREQEROzKAiL7goPiLy7lqKyWp2zcrvQ0z8ZEclQ0PPg3OT5LWLp0r6apYpfQnzV0rG+o2OIsa48sux9yDe+fdxWt6v1lat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'
+            },
+            {
+                id: 'court',
+                name: 'Nike Court Vision Low',
+                price: 2499000,
+                category: 'lifestyle',
+                colors: ['Trắng', 'Xanh Lá'],
+                sizes: ['38', '39', '40', '41'],
+                img_src:'data:image/jpeg;base64,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'
+            },
+            {
+                id: 'airmax',
+                name: 'Nike Air Max 270',
+                price: 3999000,
+                category: 'lifestyle',
+                colors: ['Trắng', 'Đỏ'],
+                sizes: ['40', '41', '42', '43'],
+                img_src: 'data:image/jpeg;base64,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'
+
+            },
+            {
+                id: 'downshifter',
+                name: 'Nike Downshifter 13',
+                price: 1599000,
+                category: 'running',
+                colors: ['Đen', 'Xanh'],
+                sizes: ['38', '39', '40', '41', '42'],
+                img_src:'data:image/webp;base64,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'
+            }
+        ];
+
+        // Biến lưu giỏ hàng
+        const CART_KEY = 'nike_demo_cart_v1';
+        let cart = loadCart();
+        let currentCategory = 'all';
+        let searchQuery = '';
+
+        // Phần tử HTML
+        const productGrid = document.getElementById('productGrid');
+        const categoryNav = document.getElementById('categoryNav');
+        const searchInput = document.getElementById('searchInput');
+        const cartCount = document.getElementById('cartCount');
+        const backdrop = document.getElementById('backdrop');
+        const cartDrawer = document.getElementById('cartDrawer');
+        const openCartBtn = document.getElementById('openCart');
+        const closeCartBtn = document.getElementById('closeCart');
+        const cartItems = document.getElementById('cartItems');
+        const cartTotal = document.getElementById('cartTotal');
+        const checkoutBtn = document.getElementById('checkoutBtn');
+        const checkoutModal = document.getElementById('checkoutModal');
+        const closeCheckout = document.getElementById('closeCheckout');
+        const summary = document.getElementById('summary');
+        const grandTotal = document.getElementById('grandTotal');
+        const placeOrder = document.getElementById('placeOrder');
+        const clearCartBtn = document.getElementById('clearCart');
+        const nameEl = document.getElementById('name');
+        const phoneEl = document.getElementById('phone');
+        const emailEl = document.getElementById('email');
+        const addressEl = document.getElementById('address');
+        const noteEl = document.getElementById('note');
+
+        // Khởi tạo
+        renderProducts();
+        updateCartUI();
+
+        // ------------------ FILTER & SEARCH ------------------
+        categoryNav?.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON') {
+                currentCategory = e.target.dataset.cat || 'all';
+                [...categoryNav.querySelectorAll('button')].forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                renderProducts();
+            }
+        });
+
+        searchInput?.addEventListener('input', (e) => {
+            searchQuery = e.target.value.toLowerCase();
+            renderProducts();
+        });
+
+        // ------------------ CART HANDLERS ------------------
+        openCartBtn?.addEventListener('click', openCart);
+        closeCartBtn?.addEventListener('click', closeCart);
+        backdrop?.addEventListener('click', () => { closeCart(); hideCheckout(); });
+
+        checkoutBtn?.addEventListener('click', () => {
+            if (cart.length === 0) { alert('Giỏ hàng trống'); return; }
+            showCheckout();
+        });
+
+        closeCheckout?.addEventListener('click', hideCheckout);
+        placeOrder?.addEventListener('click', placeDemoOrder);
+        clearCartBtn?.addEventListener('click', () => {
+            if (confirm('Xoá toàn bộ giỏ hàng?')) {
+                cart = [];
+                saveCart(); updateCartUI(); renderSummary();
+            }
+        });
+
+        // ------------------ FUNCTIONS ------------------
+        function cardHTML(p) {
+            return `
+            <div class="card">
+                <div class="card-img">
+                    <img src="${p.img_src}" alt="${p.name}">
+                    ${p.tag ? `<span class="tag">${p.tag}</span>` : ''}
+                </div>
+                <div class="card-body">
+                    <h3>${p.name}</h3>
+                    <p class="price">${VND.format(p.price)}</p>
+                    <button onclick="addToCart('${p.id}')" class="btn btn-primary">Thêm vào giỏ</button>
+                </div>
+            </div>`;
+        }
+
+        function renderProducts() {
+            const filtered = products.filter(p => {
+                const matchCat = currentCategory === 'all' || p.category === currentCategory;
+                const matchSearch = !searchQuery || p.name.toLowerCase().includes(searchQuery);
+                return matchCat && matchSearch;
+            });
+            productGrid.innerHTML = filtered.map(p => cardHTML(p)).join('') ||
+                `<div>Không tìm thấy sản phẩm phù hợp.</div>`;
+        }
+
+        function getProduct(id) {
+            return products.find(p => p.id === id);
+        }
+
+        function addToCart(id) {
+            const found = cart.find(c => c.id === id);
+            if (found) found.qty++;
+            else cart.push({ id, qty: 1 });
+            saveCart();
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            cartCount.textContent = cart.reduce((s, c) => s + c.qty, 0);
+            cartItems.innerHTML = cart.map(c => {
+                const p = getProduct(c.id);
+                return `
+                <div class="cart-item">
+                    <img src="${p.img_src}" alt="${p.name}">
+                    <div>
+                        <div>${p.name}</div>
+                        <div>${VND.format(p.price)} × ${c.qty}</div>
+                    </div>
+                    <button onclick="removeFromCart('${c.id}')">✕</button>
+                </div>`;
+            }).join('') || '<p>Giỏ hàng trống.</p>';
+            const total = cart.reduce((s, c) => s + getProduct(c.id).price * c.qty, 0);
+            cartTotal.textContent = VND.format(total);
+        }
+
+        function removeFromCart(id) {
+            cart = cart.filter(c => c.id !== id);
+            saveCart();
+            updateCartUI();
+        }
+
+        function openCart() {
+            cartDrawer.setAttribute('aria-hidden', 'false');
+            backdrop.style.display = 'block';
+        }
+
+        function closeCart() {
+            cartDrawer.setAttribute('aria-hidden', 'true');
+            backdrop.style.display = 'none';
+        }
+
+        function showCheckout() {
+            renderSummaray();
+            checkoutModal.style.display = 'flex';
+        }
+
+        function hideCheckout() {
+            checkoutModal.style.display = 'none';
+        }
+
+        function renderSummary() {
+            summary.innerHTML = cart.map(c => {
+                const p = getProduct(c.id);
+                return `<div style="display:flex; justify-content:space-between;">
+                    <span>${p.name} × ${c.qty}</span>
+                    <span>${VND.format(p.price * c.qty)}</span>
+                </div>`;
+            }).join('');
+            const total = cart.reduce((s, c) => s + getProduct(c.id).price * c.qty, 0);
+            grandTotal.textContent = VND.format(total);
+        }
+
+        function placeDemoOrder() {
+            if (!nameEl.value.trim()) { alert('Vui lòng nhập họ tên'); return; }
+            if (!phoneEl.value.trim()) { alert('Vui lòng nhập số điện thoại'); return; }
+            if (!addressEl.value.trim()) { alert('Vui lòng nhập địa chỉ'); return; }
+
+            const order = {
+                customer: {
+                    name: nameEl.value.trim(),
+                    phone: phoneEl.value.trim(),
+                    email: emailEl.value.trim(),
+                    address: addressEl.value.trim(),
+                    note: noteEl.value.trim()
+                },
+                items: cart.map(c => ({ ...c })),
+                total: cart.reduce((s, c) => s + getProduct(c.id).price * c.qty, 0),
+                createdAt: new Date().toISOString()
+            };
+            console.log('Demo order:', order);
+            alert('✅ Đơn hàng DEMO đã tạo! Kiểm tra console để xem chi tiết.');
+            cart = [];
+            saveCart(); updateCartUI(); hideCheckout(); closeCart();
+            [nameEl, phoneEl, emailEl, addressEl, noteEl].forEach(i => i.value = '');
+        }
+
+        function saveCart() {
+            localStorage.setItem(CART_KEY, JSON.stringify(cart));
+        }
+
+        function loadCart() {
+            try { return JSON.parse(localStorage.getItem(CART_KEY)) || []; }
+            catch { return []; }
+        }
+    </script>
+
+</body>
+</html>
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+</div>
